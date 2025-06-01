@@ -1,0 +1,62 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- 캐릭터 로딩
+local function getCharacter()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    repeat wait() until character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid")
+    return character
+end
+
+-- 안 날아가게 설정
+local function activateAntiKnockback(character)
+    -- 1. 물리 질량 증가
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CustomPhysicalProperties = PhysicalProperties.new(1000, 0.3, 0.5)
+        end
+    end
+
+    -- 2. 강제 밀림 제거
+    character.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("BodyVelocity")
+        or descendant:IsA("BodyAngularVelocity")
+        or descendant:IsA("LinearVelocity")
+        or descendant:IsA("VectorForce")
+        or descendant:IsA("BodyForce") then
+            descendant:Destroy()
+        end
+    end)
+
+    -- 3. 비정상적인 큰 힘만 차단 (자연스러운 점프와 걷기는 허용)
+    RunService.Heartbeat:Connect(function()
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if root then
+            local vel = root.AssemblyLinearVelocity
+            local maxSpeed = 100 -- 이 이상 튕기면 이상한 힘이라고 판단
+
+            local newVel = Vector3.new(
+                math.clamp(vel.X, -maxSpeed, maxSpeed),
+                vel.Y, -- Y축(점프)은 유지
+                math.clamp(vel.Z, -maxSpeed, maxSpeed)
+            )
+            root.AssemblyLinearVelocity = newVel
+            root.RotVelocity = Vector3.zero
+        end
+    end)
+end
+
+-- 캐릭터 생성 시 실행
+local function setup()
+    local char = getCharacter()
+    activateAntiKnockback(char)
+
+    LocalPlayer.CharacterAdded:Connect(function(newChar)
+        wait(1)
+        activateAntiKnockback(newChar)
+    end)
+end
+
+-- 실행
+setup()
